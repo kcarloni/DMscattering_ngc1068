@@ -80,11 +80,8 @@ def get_RHS_matrices(g, mphi, mx, interaction, energy_nodes):
              # Comparing with NuFate paper: multiply by E_j (= E_in) to account
                 # for log scale, then by E_i^2/E_j^2 to account for variable change phi -> E^2*phi
 
-            # RHSMatrix[i][j] = DeltaE[j-1] * dsigmadE[i,j] * energy_nodes[j]**-1 * energy_nodes[i]**2
-
-            # K: I think it should be DeltaE[j] = np.diff(...)[j] = (...)[j+1] - (...)[j]
-            RHSMatrix[i][j] = DeltaE[j] * dsigmadE[i,j] * energy_nodes[j]**-1 * energy_nodes[i]**2
-            
+                # DeltaE[j-1] = logE[j] - logE[j-1] = d(logE[j])
+            RHSMatrix[i][j] = DeltaE[j-1] * dsigmadE[i,j] * energy_nodes[j]**-1 * energy_nodes[i]**2
     return RHSMatrix, sigma_array # in eV
 
 def get_eigs(g, mphi, mx, interaction, logemin, logemax):
@@ -104,13 +101,14 @@ def get_eigs(g, mphi, mx, interaction, logemin, logemax):
             energy_nodes: neutrino energy in eV
             phi0: initial neutrino flux
         """
-    #Note that the solution is scaled by E^2; if you want to modify the incoming spectrum a lot, you'll need to change this here, as well as in the definition of RHS.
+    # Note that the solution is scaled by E^2; if you want to modify the incoming spectrum a lot, 
+    # you'll need to change this here, as well as in the definition of RHS.
     NumNodes = 5 #120
     energy_nodes = np.logspace(logemin,logemax,NumNodes)*GeV # eV
     RHSMatrix, sigma_array = get_RHS_matrices(g, mphi, mx, interaction, energy_nodes)
 
-    # note: this is E^2phi_0
-    phi_0 = energy_nodes**(2-gamma) #eV^(2-gamma)
+    # note: this is E^2 * phi_0
+    phi_0 = energy_nodes**(2-gamma)
 
     w,v = LA.eig(-np.diag(sigma_array)+RHSMatrix)
     ci = LA.lstsq(v,phi_0,rcond=None)[0]
@@ -120,8 +118,28 @@ def get_eigs(g, mphi, mx, interaction, logemin, logemax):
 # ================ Attenuated Flux ===================
 
 def get_att_value_theta(w, v, ci, energy_nodes, gamma, t):
-    w=np.tile(w,[len(energy_nodes),1])
-    phisol = np.inner(v,ci*np.exp(w.T*t).T).T * energy_nodes**(2-gamma) #attenuated flux
+    
+    # w = np.tile(w,[len(energy_nodes),1])
+    # phisol = np.inner(v,ci*np.exp(w.T*t).T).T * energy_nodes**(2-gamma) #attenuated flux
+
+    # K: we want to return a vector phi_sol of length = len(energy_nodes).
+    # following eq. (7) in https://arxiv.org/pdf/1706.09895.pdf
+    # also, the code should match https://github.com/aaronvincent/nuFATE/blob/master/src/python/example.py, lines 22-34
+
+    # phi_j(x) = sum_i c_i * phi_hat_i * exp(lambda_i * x)
+    
+    # where x = t is the column density
+    #       phi_hat_i = the ith eigenvector of M = v[:,i]
+    #       lambda_i = the corresponding ith eigenvalue
+    #       c_i = the solution to v * x = phi_0, where v is the eigenvector matrix
+
+    # in other words, 
+    #   phisol = sum_i( v[:,i] * ci[i] * exp(w[i] * t) ) 
+
+    # note! we do not need an additional multiplication by the flux;
+    # we could optionally divide out the initial flux to get the attenuation ratio, phi_sol / phi_0
+
+    phisol = np.dot(v, (ci * np.exp(w * t)))
     return phisol
 
 def attenuated_flux(g, mphi, mx, interaction='scalar'):
