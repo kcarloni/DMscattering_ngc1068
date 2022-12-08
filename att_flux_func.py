@@ -142,16 +142,16 @@ def get_att_value_theta(w, v, ci, energy_nodes, gamma, t):
     phisol = np.dot(v, (ci * np.exp(w * t)))
     return phisol
 
-def attenuated_flux(g, mphi, mx, interaction='scalar'):
+# return the (interpolated) value of the attenuated flux at E
+#   given the column density set by global var (top of file.)
+def attenuated_flux(E, g, mphi, mx, interaction='scalar'):
     w, v, ci, energy_nodes = get_eigs(g, mphi, mx,interaction,logemin,logemax)
-    print(w.shape)
-    print(v.shape)
-    print(ci.shape)
-    print(energy_nodes.shape)
 
-    flux_astro=np.ones(len(energy_nodes))
     t = column_dens # one value
     flux_astro = get_att_value_theta(w, v, ci, energy_nodes, gamma, t)
-    return flux_astro
 
-printSta = (attenuated_flux(3e-1,1e7,1e8))
+    # interpolate in log-space, to use linear point spacing
+    logE = np.log10(E)
+    return np.interp(logE, np.log10(energy_nodes), flux_astro)
+
+    # return flux_astro
