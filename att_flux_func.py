@@ -144,7 +144,6 @@ def get_att_value_theta(w, v, ci, energy_nodes, gamma, t):
 
 # return the (interpolated) value of the attenuated flux at E
 #   given the column density set by global var (top of file.)
-# note! as above, the "flux" is really E^2 * flux
 def attenuated_flux(E, g, mphi, mx, interaction='scalar'):
     w, v, ci, energy_nodes = get_eigs(g, mphi, mx,interaction,logemin,logemax)
 
@@ -153,6 +152,7 @@ def attenuated_flux(E, g, mphi, mx, interaction='scalar'):
 
     # interpolate in log-space, to use linear point spacing
     logE = np.log10(E)
-    return np.interp(logE, np.log10(energy_nodes), flux_astro)
+    interp_flux = np.interp(logE, np.log10(energy_nodes), flux_astro)
 
-    # return flux_astro
+    # divide out the E^2 !!
+    return interp_flux / E**2
