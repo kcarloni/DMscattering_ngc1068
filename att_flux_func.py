@@ -79,7 +79,12 @@ def get_RHS_matrices(g, mphi, mx, interaction, energy_nodes):
         for j in range(i+1,NumNodes):
              # Comparing with NuFate paper: multiply by E_j (= E_in) to account
                 # for log scale, then by E_i^2/E_j^2 to account for variable change phi -> E^2*phi
-            RHSMatrix[i][j] = DeltaE[j-1] * dsigmadE[i,j] * energy_nodes[j]**-1 * energy_nodes[i]**2
+
+            # RHSMatrix[i][j] = DeltaE[j-1] * dsigmadE[i,j] * energy_nodes[j]**-1 * energy_nodes[i]**2
+
+            # K: I think it should be DeltaE[j] = np.diff(...)[j] = (...)[j+1] - (...)[j]
+            RHSMatrix[i][j] = DeltaE[j] * dsigmadE[i,j] * energy_nodes[j]**-1 * energy_nodes[i]**2
+            
     return RHSMatrix, sigma_array # in eV
 
 def get_eigs(g, mphi, mx, interaction, logemin, logemax):
