@@ -4,12 +4,8 @@ from numpy import linalg as LA
 
 # global variables:
 
-logemin = 3 #log GeV
-logemax = 7 #log GeV
-
-gamma = 2.67
 # column_dens=np.load('column_dens.npy')
-column_dens=1e23 # should
+column_dens = 1e23
 
 # natural units
 GeV = 1.0e9
@@ -84,9 +80,10 @@ def get_RHS_matrices(g, mphi, mx, interaction, energy_nodes):
 
                 # DeltaE[j-1] = logE[j] - logE[j-1] = d(logE[j])
             RHSMatrix[i][j] = DeltaE[j-1] * dsigmadE[i,j] * energy_nodes[j]**-1 * energy_nodes[i]**2
-    return RHSMatrix, sigma_array # in eV
 
-def get_eigs(g, mphi, mx, interaction, logemin, logemax):
+    return RHSMatrix, sigma_array
+
+def get_eigs(g, mphi, mx, interaction, energy_nodes):
     """ Returns the eigenvalues and vectors of matrix M in eqn 6
 
         Args:
@@ -105,8 +102,6 @@ def get_eigs(g, mphi, mx, interaction, logemin, logemax):
         """
     # Note that the solution is scaled by E^2; if you want to modify the incoming spectrum a lot, 
     # you'll need to change this here, as well as in the definition of RHS.
-    NumNodes = 5 #120
-    energy_nodes = np.logspace(logemin,logemax,NumNodes)*GeV # eV
     RHSMatrix, sigma_array = get_RHS_matrices(g, mphi, mx, interaction, energy_nodes)
 
     # note: this is E^2 * phi_0
@@ -114,7 +109,7 @@ def get_eigs(g, mphi, mx, interaction, logemin, logemax):
 
     w,v = LA.eig(-np.diag(sigma_array)+RHSMatrix)
     ci = LA.lstsq(v,phi_0,rcond=None)[0]
-    return w,v,ci,energy_nodes
+    return w, v, ci
 
 
 # ================ Attenuated Flux ===================
@@ -144,20 +139,27 @@ def get_att_value_theta(w, v, ci, energy_nodes, gamma, t):
     phisol = np.dot(v, (ci * np.exp(w * t)))
     return phisol
 
-# return the (interpolated) value of the attenuated flux at E
+# return the (interpolated) flux function, flux(E) where E is in GeV. 
+# Args: 
+#   DM parameters (g, mphi, mx) + interaction type
+#   flux parameters (gamma)
+#   energy range (in GeV) defined by (logemin, logemax)
 # currently, 
-#   - the column density t                      is set by global var (top of file.)
-#   - the spectral index gamma                  is set by global var (top of file.)
-#   - the energy range is set by logemin, logemax, set by global var (top of file.)
-def attenuated_flux(E, g, mphi, mx, interaction='scalar'):
-    w, v, ci, energy_nodes = get_eigs(g, mphi, mx,interaction,logemin,logemax)
+#   - the column density t is set by global var (top of file.)
+def attenuated_flux(g, mphi, mx, gamma=3.2, interaction='scalar', logemin=3, logemax=7, NumNodes=120):
 
-    t = column_dens # one value
-    flux_astro = get_att_value_theta(w, v, ci, energy_nodes, gamma, t)
+    # NumNodes = 5 #120
+    # energy_nodes = np.logspace(logemin, logemax, NumNodes)*GeV # in eV
+
+    logE_nodes = np.linspace(logemin, logemax, NumNodes)        # log(E / GeV)
+    energy_nodes = np.exp10(logE_nodes)                         # in eV
+
+    w, v, ci = get_eigs(g, mphi, mx,interaction, energy_nodes)
+
+    t = column_dens # one value, set globally (top of file)
+    flux_astro = get_att_value_theta(w, v, ci, energy_nodes, gamma, t)  # in eV
 
     # interpolate in log-space, to use linear point spacing
-    logE = np.log10(E)
-    interp_flux = np.interp(logE, np.log10(energy_nodes), flux_astro)
-
-    # divide out the E^2 !!
-    return interp_flux / E**2
+    # also, divide out the E^2 (note flux is calc in eV, so need to multiply by GeV)
+    f_flux = (lambda E : np.interp(np.log10(E), logE_nodes, flux_astro) * GeV/E^2 )
+    return f_flux
