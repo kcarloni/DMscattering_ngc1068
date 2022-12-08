@@ -83,7 +83,7 @@ def get_RHS_matrices(g, mphi, mx, interaction, energy_nodes):
 
     return RHSMatrix, sigma_array
 
-def get_eigs(g, mphi, mx, interaction, energy_nodes):
+def get_eigs(g, mphi, mx, interaction, energy_nodes, gamma):
     """ Returns the eigenvalues and vectors of matrix M in eqn 6
 
         Args:
@@ -105,7 +105,7 @@ def get_eigs(g, mphi, mx, interaction, energy_nodes):
     RHSMatrix, sigma_array = get_RHS_matrices(g, mphi, mx, interaction, energy_nodes)
 
     # note: this is E^2 * phi_0
-    phi_0 = energy_nodes**(2-gamma)
+    phi_0 = energy_nodes**(2 - gamma)
 
     w,v = LA.eig(-np.diag(sigma_array)+RHSMatrix)
     ci = LA.lstsq(v,phi_0,rcond=None)[0]
@@ -114,7 +114,7 @@ def get_eigs(g, mphi, mx, interaction, energy_nodes):
 
 # ================ Attenuated Flux ===================
 
-def get_att_value_theta(w, v, ci, energy_nodes, gamma, t):
+def get_att_value_theta(w, v, ci, energy_nodes, t):
     
     # w = np.tile(w,[len(energy_nodes),1])
     # phisol = np.inner(v,ci*np.exp(w.T*t).T).T * energy_nodes**(2-gamma) #attenuated flux
@@ -152,14 +152,14 @@ def attenuated_flux(g, mphi, mx, gamma=3.2, interaction='scalar', logemin=3, log
     # energy_nodes = np.logspace(logemin, logemax, NumNodes)*GeV # in eV
 
     logE_nodes = np.linspace(logemin, logemax, NumNodes)        # log(E / GeV)
-    energy_nodes = np.exp10(logE_nodes)                         # in eV
+    energy_nodes = np.power(logE_nodes, 10)*GeV                         # in eV
 
-    w, v, ci = get_eigs(g, mphi, mx,interaction, energy_nodes)
+    w, v, ci = get_eigs(g, mphi, mx,interaction, energy_nodes, gamma)
 
     t = column_dens # one value, set globally (top of file)
-    flux_astro = get_att_value_theta(w, v, ci, energy_nodes, gamma, t)  # in eV
+    flux_astro = get_att_value_theta(w, v, ci, energy_nodes, t)  # in eV
 
     # interpolate in log-space, to use linear point spacing
-    # also, divide out the E^2 (note flux is calc in eV, so need to multiply by GeV)
-    f_flux = (lambda E : np.interp(np.log10(E), logE_nodes, flux_astro) * GeV/E^2 )
+    # also, divide out the E^2 (note flux is calc in eV, so need to fix units)
+    f_flux = (lambda E : np.interp(np.log10(E), logE_nodes, flux_astro) * 1/E**2 * (GeV)^(gamma-2) )
     return f_flux
