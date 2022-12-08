@@ -32,18 +32,18 @@ def theta(Enu_i, Enu_f, mx):
 def dthetadE(Enu_f, mx):
     return mx/Enu_f**2
 
-def dxsdE_f_scalar(Enu_i, Enu_f, g, mx, mphi):
+def dxsdE_f_scalar(Enu_i, Enu_f, g, mphi, mx):
     th = theta(Enu_i, Enu_f, mx)
     return dthetadE(Enu_f, mx)*g**2/(16*np.pi)*(th*Enu_i**2*mx)/((th*Enu_i+mx)*\
                                                               (th*Enu_i*mphi**2+\
                                                                mx*(mphi**2+2*th*Enu_i**2))**2) #corrected dsign mistake here
 
-def SSHeavyMediator(Enu,gs,mphi,mx): #Scalar DM, Scalar mediator
+def SSHeavyMediator(Enu, g, mphi, mx): #Scalar DM, Scalar mediator
     ## THIS FORMULA IS IN THE LAB FRAME (eV)
     Es=D(Enu)
     dm=D(mx)
     p=D(mphi)
-    g=D(gs)
+    g=D(g)
     E2=Es**D(2.0)
     m2=dm**D(2.0)
     p2=p**D(2.0)
@@ -60,12 +60,12 @@ def SSHeavyMediator(Enu,gs,mphi,mx): #Scalar DM, Scalar mediator
     return float(sig)
 
 # ================ Cascade Equation for Attenuation ===================
-def get_RHS_matrices(g,mphi,mx,interaction,energy_nodes):
+def get_RHS_matrices(g, mphi, mx, interaction, energy_nodes):
     NumNodes = energy_nodes.shape[0]
     # auxiliary functions
     if interaction == 'scalar':
-        sigma = lambda E: SSHeavyMediator(E,g,mphi,mx)
-        DiffXS = lambda Ei,Ef: dxsdE_f_scalar(Ei, Ef, g, mx, mphi) if (Ei > Ef) else 0
+        sigma = lambda E: SSHeavyMediator(E, g, mphi, mx)
+        DiffXS = lambda Ei,Ef: dxsdE_f_scalar(Ei, Ef, g, mphi, mx) if (Ei > Ef) else 0
 
     sigma_array = np.array(list(map(sigma,energy_nodes))) # this is for python 3
 
@@ -73,17 +73,20 @@ def get_RHS_matrices(g,mphi,mx,interaction,energy_nodes):
     dsigmadE = np.array([[DiffXS(Ei,Ef) for Ei in energy_nodes] for Ef in energy_nodes])
     DeltaE = np.diff(np.log(energy_nodes))
     RHSMatrix = np.zeros((NumNodes,NumNodes))
+
     # fill in diagonal terms
     for i in range(NumNodes):
         for j in range(i+1,NumNodes):
-            RHSMatrix[i][j] = DeltaE[j-1]*dsigmadE[i][j]*energy_nodes[j]**-1*energy_nodes[i]**2
+             # Comparing with NuFate paper: multiply by E_j (= E_in) to account
+                # for log scale, then by E_i^2/E_j^2 to account for variable change phi -> E^2*phi
+            RHSMatrix[i][j] = DeltaE[j-1] * dsigmadE[i,j] * energy_nodes[j]**-1 * energy_nodes[i]**2
     return RHSMatrix, sigma_array # in eV
 
-def get_eigs(g,mphi,mx,interaction,logemin,logemax):
+def get_eigs(g, mphi, mx, interaction, logemin, logemax):
     """ Returns the eigenvalues and vectors of matrix M in eqn 6
 
         Args:
-            mp: class for DM-nu scenario containing the coupling (mp.g), DM mass (mp.mx) in eV and mediator mass (mp.mphi) in eV
+            parameters of DM-nu scenario: the coupling (g), mediator mass (mphi) in eV, and DM mass (mx) in eV
             interaction: interaction between DM and nu
             gamma: power law index of isotropic flux E^-gamma
             logemin: min nu energy log of GeV
@@ -99,7 +102,9 @@ def get_eigs(g,mphi,mx,interaction,logemin,logemax):
     #Note that the solution is scaled by E^2; if you want to modify the incoming spectrum a lot, you'll need to change this here, as well as in the definition of RHS.
     NumNodes = 5 #120
     energy_nodes = np.logspace(logemin,logemax,NumNodes)*GeV # eV
-    RHSMatrix, sigma_array = get_RHS_matrices(g,mphi,mx,interaction,energy_nodes)
+    RHSMatrix, sigma_array = get_RHS_matrices(g, mphi, mx, interaction, energy_nodes)
+
+    # note: this is E^2phi_0
     phi_0 = energy_nodes**(2-gamma) #eV^(2-gamma)
 
     w,v = LA.eig(-np.diag(sigma_array)+RHSMatrix)
@@ -109,13 +114,13 @@ def get_eigs(g,mphi,mx,interaction,logemin,logemax):
 
 # ================ Attenuated Flux ===================
 
-def get_att_value_theta(w, v, ci, energy_nodes,gamma,t):
+def get_att_value_theta(w, v, ci, energy_nodes, gamma, t):
     w=np.tile(w,[len(energy_nodes),1])
-    phisol = np.inner(v,ci*np.exp(w.T*t).T).T*energy_nodes**(-gamma) #attenuated flux
+    phisol = np.inner(v,ci*np.exp(w.T*t).T).T * energy_nodes**(2-gamma) #attenuated flux
     return phisol
 
-def attenuated_flux(g,mphi,mx, interaction='scalar'):
-    w, v, ci, energy_nodes = get_eigs(g,mphi,mx,interaction,logemin,logemax)
+def attenuated_flux(g, mphi, mx, interaction='scalar'):
+    w, v, ci, energy_nodes = get_eigs(g, mphi, mx,interaction,logemin,logemax)
     print(w.shape)
     print(v.shape)
     print(ci.shape)
