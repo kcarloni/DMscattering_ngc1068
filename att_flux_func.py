@@ -2,9 +2,14 @@ import numpy as np
 from decimal import Decimal as D
 from numpy import linalg as LA
 
+# global variables:
+
 logemin = 3 #log GeV
 logemax = 7 #log GeV
+
 gamma = 2.67
+# column_dens=np.load('column_dens.npy')
+column_dens=1e23 # should
 
 # natural units
 GeV = 1.0e9
@@ -17,9 +22,6 @@ gr = 1e-3*kg
 Na = 6.0221415e+23
 parsec = 3.0857e16*meter
 kpc = 1.0e3*parsec
-
-# column_dens=np.load('column_dens.npy')
-column_dens=1e23 # should
 
 # ================ Cross-Sections ===================
 # Enu_i: Initial Energy before scattering
@@ -143,7 +145,10 @@ def get_att_value_theta(w, v, ci, energy_nodes, gamma, t):
     return phisol
 
 # return the (interpolated) value of the attenuated flux at E
-#   given the column density set by global var (top of file.)
+# currently, 
+#   - the column density t                      is set by global var (top of file.)
+#   - the spectral index gamma                  is set by global var (top of file.)
+#   - the energy range is set by logemin, logemax, set by global var (top of file.)
 def attenuated_flux(E, g, mphi, mx, interaction='scalar'):
     w, v, ci, energy_nodes = get_eigs(g, mphi, mx,interaction,logemin,logemax)
 
