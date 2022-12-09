@@ -161,5 +161,5 @@ def attenuated_flux(g, mphi, mx, gamma=3.2, interaction='scalar', logemin=3, log
 
     # interpolate in log-space, to use linear point spacing
     # also, divide out the E^2 (note flux is calc in eV, so need to fix units)
-    f_flux = (lambda E : np.interp(np.log10(E), logE_nodes, flux_astro) * 1/E**2 * (GeV)^(gamma-2) )
+    f_flux = (lambda E : np.interp(np.log10(E), logE_nodes, flux_astro) * 1/E**2 * (GeV)**(gamma-2) )
     return f_flux
