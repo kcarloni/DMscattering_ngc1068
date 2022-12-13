@@ -157,7 +157,6 @@ def attenuated_flux(g, mphi, mx, gamma=3.2, column_dens=1e23, interaction='scala
 
     t = column_dens # one value, set globally (top of file)
     flux_astro = get_att_value_theta(w, v, ci, energy_nodes, t)  # in eV
-    print(flux_astro)
 
     # interpolate in log-space, to use linear point spacing
     # also, divide out the E^2 (note flux is calc in eV, so need to fix units)
