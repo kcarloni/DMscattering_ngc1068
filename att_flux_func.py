@@ -5,7 +5,7 @@ from numpy import linalg as LA
 # global variables:
 
 # column_dens=np.load('column_dens.npy')
-column_dens = 1e23
+# column_dens = 1e23
 
 # natural units
 GeV = 1.0e9
@@ -144,20 +144,20 @@ def get_att_value_theta(w, v, ci, energy_nodes, t):
 #   DM parameters (g, mphi, mx) + interaction type
 #   flux parameters (gamma)
 #   energy range (in GeV) defined by (logemin, logemax)
-# currently, 
-#   - the column density t is set by global var (top of file.)
-def attenuated_flux(g, mphi, mx, gamma=3.2, interaction='scalar', logemin=3, logemax=7, NumNodes=120):
+#   the column density t 
+def attenuated_flux(g, mphi, mx, gamma=3.2, column_dens=1e23, interaction='scalar', logemin=3, logemax=7, NumNodes=120):
 
     # NumNodes = 5 #120
     # energy_nodes = np.logspace(logemin, logemax, NumNodes)*GeV # in eV
 
     logE_nodes = np.linspace(logemin, logemax, NumNodes)        # log(E / GeV)
-    energy_nodes = np.power(logE_nodes, 10)*GeV                         # in eV
+    energy_nodes = np.power(10, logE_nodes)*GeV                         # in eV
 
-    w, v, ci = get_eigs(g, mphi, mx,interaction, energy_nodes, gamma)
+    w, v, ci = get_eigs(g, mphi, mx, interaction, energy_nodes, gamma)
 
     t = column_dens # one value, set globally (top of file)
     flux_astro = get_att_value_theta(w, v, ci, energy_nodes, t)  # in eV
+    print(flux_astro)
 
     # interpolate in log-space, to use linear point spacing
     # also, divide out the E^2 (note flux is calc in eV, so need to fix units)
