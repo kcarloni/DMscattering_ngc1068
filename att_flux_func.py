@@ -14,8 +14,7 @@ keV = 1.0e3
 
 # note: comes from setting hbar*c = 1 = ... m eV
 meter = 5.06773093741e6     # = [m]  / [1/eV]
-cm = 1e2 * meter            # = [cm] / [1/eV]
-# cm = 1.0e-2*meter
+cm = 1e-2 * meter            # = [cm] / [1/eV]
 
 # kg = 5.62e35
 # gr = 1e-3*kg
