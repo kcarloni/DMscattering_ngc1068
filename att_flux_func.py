@@ -11,13 +11,17 @@ from numpy import linalg as LA
 GeV = 1.0e9
 MeV = 1.0e6
 keV = 1.0e3
-meter = 5.06773093741e6
-cm = 1.0e-2*meter
-kg = 5.62e35
-gr = 1e-3*kg
+
+meter = 5.06773093741e6     # = [m]  / [1/eV]
+cm = 1e2 * meter            # = [cm] / [1/eV]
+# cm = 1.0e-2*meter
+
+# kg = 5.62e35
+# gr = 1e-3*kg
 Na = 6.0221415e+23
-parsec = 3.0857e16*meter
-kpc = 1.0e3*parsec
+
+# parsec = 3.0857e16*meter
+# kpc = 1.0e3*parsec
 
 # ================ Cross-Sections ===================
 # Enu_i: Initial Energy before scattering
