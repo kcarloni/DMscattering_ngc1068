@@ -1,5 +1,5 @@
 import numpy as np
-from decimal import Decimal as D
+from decimal import Decimal as D        # getcontext().prec = 28
 from numpy import linalg as LA
 
 # global variables:
