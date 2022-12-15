@@ -33,11 +33,11 @@ get_dx_dE(Eν_f; mχ) = mχ / Eν_f^2
 #   (!) includes the coupling g 
 function σ_ScalarScalar(Eν; g, mϕ, mχ)
 
-    # convert to Dec128 for precision
-    Eν = Dec128(Eν)
-    g = Dec128(g)
-    mϕ = Dec128(mϕ)
-    mχ = Dec128(mχ)
+    # # convert to Dec128 for precision
+    # Eν = Dec128(Eν)
+    # g = Dec128(g)
+    # mϕ = Dec128(mϕ)
+    # mχ = Dec128(mχ)
     
     term_1 = mϕ^2 * (2Eν + mχ)
     term_2 = (2Eν * mϕ^2) + (4Eν^2 * mχ) + (mϕ^2 * mχ)    
@@ -74,10 +74,10 @@ function σ_FermionVector(E; g, mϕ, mχ)
     A = 2E + mχ             # ~ E
     B = 4E^2*mχ + mϕ^2*A    # ~ E³
 
-    term_1 = (mϕ^2 + mχ*A) * ( log(mϕ^2 * A) - log(B) )         # ~ E²
-    term_2 = 4E^2 * (1 + mχ^2/mϕ^2 - 2E(E*mχ^2 + B)/(A*B))      # ~ E²
+    term_1 = (mϕ^2 + mχ*A) * ( 2log(mϕ) + log(A) - log(B) )      # ~ E²
+    term_2 = 4E^2 * (1 + mχ^2/mϕ^2 - 2E*(E*mχ^2 + B)/(A*B))      # ~ E²
 
-    return g^2/16π * (term_1 + term_2)/(E^2 * mχ^2)             # ~ 1/E²
+    return g^2/16π * (term_1 + term_2)/(E^2 * mχ^2)              # ~ 1/E²
 end
 
 function dσ_dE_FermionVector(Eν_i, Eν_f; g, mχ, mϕ)
@@ -89,7 +89,7 @@ function dσ_dE_FermionVector(Eν_i, Eν_f; g, mχ, mϕ)
     denom = (y*E + mχ) * (mχ * 2y*E^2 + mϕ^2*(mχ + 2y*E))^2
 
     return dx_dE * g^2/4π * num/denom
-
+end
 
 # ------------------------------------
 
