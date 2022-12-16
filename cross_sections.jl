@@ -7,13 +7,28 @@ using DecFP
 
 abstract type Interaction end
 abstract type ScalarScalar <: Interaction end
+abstract type FermionVector <: Interaction end
+abstract type ScalarFermion <: Interaction end
 
 function get_σ(interaction_type::Type{T}) where (T <: ScalarScalar)
     return σ_ScalarScalar
 end
+function get_σ(interaction_type::Type{T}) where (T <: FermionVector)
+    return σ_FermionVector
+end
+function get_σ(interaction_type::Type{T}) where (T <: ScalarFermion)
+    return σ_ScalarFermion
+end
+
 
 function get_dσ_dE(interaction_type::Type{T}) where (T <: ScalarScalar)
     return dσ_dE_ScalarScalar
+end
+function get_dσ_dE(interaction_type::Type{T}) where (T <: FermionVector)
+    return dσ_dE_FermionVector
+end
+function get_dσ_dE(interaction_type::Type{T}) where (T <: ScalarFermion)
+    return dσ_dE_ScalarFermion
 end
 
 
@@ -55,7 +70,7 @@ function dσ_dE_ScalarScalar(Eν_i, Eν_f; g, mχ, mϕ)
     y = get_y(Eν_i, Eν_f; mχ)
     dx_dE = get_dx_dE(Eν_f; mχ) 
 
-    # dσ/dEν_f = dσ/dx * dx/dEν_f
+    # dσ/dx
     frac_2_num = g^2/16π * y * Eν_i^2 * mχ
     frac_2_denom = (y*Eν_i + mχ) * (y*Eν_i*mϕ^2 + mχ*(mϕ^2 + 2y*Eν_i^2))^2
 
@@ -86,7 +101,7 @@ function dσ_dE_FermionVector(Eν_i, Eν_f; g, mχ, mϕ)
     
     E = Eν_i
     num = E^2 * mχ^2 * ( y*(2-y)*E*mχ + y^2*E^2 + (2-y)*mχ^2 )
-    denom = (y*E + mχ) * (mχ * 2y*E^2 + mϕ^2*(mχ + 2y*E))^2
+    denom = (y*E + mχ) * (mχ * 2y*E^2 + mϕ^2*(mχ + y*E))^2
 
     return dx_dE * g^2/4π * num/denom
 end
@@ -95,3 +110,36 @@ end
 
 # scalar dark matter + fermion mediator
 # formula in the lab frame
+
+# g² = (g²)^2 is unitless
+function σ_ScalarFermion(E; g, mϕ, mχ)
+
+    A = mχ + 2E             # ~ E
+    B = mχ - 2E             # ~ E
+
+    term_1 = 8E^2 * mχ / A * (mχ*A - mϕ^2)^2                # ~ 1/E^2
+    term_2 = 4/(mχ * B - mϕ^2)                              # ~ 1/E^2
+    term_3 = 8/(mχ * A - mϕ^2)                              # ~ 1/E^2
+
+    term_4 = 3/E^2 - (6mϕ^2 + 2mχ * B)/(Emχ * (mχ*A - mϕ^2))    # ~ 1/E^2 
+    log_term = log1p( 4E^2 * mχ/(mϕ^2 * A - mχ^3) )
+
+    return g^2/64π * (term_1 + term_2 + term_3 + term_4*log_term)
+end
+
+# g² = (g²)^2 is unitless
+function dσ_dE_ScalarFermion(Eν_i, Eν_f; g, mχ, mϕ)
+    y = get_y(Eν_i, Eν_f; mχ)
+    dx_dE = get_dx_dE(Eν_f; mχ)                                     # ~ 1/E   
+    
+    E = Eν_i
+
+    num = E^4 * mχ^5 * (2-y) * ( y*E + 2mχ )^2                      # ~ E^11
+
+    denom_1 = (mχ*(2E + mχ) - mϕ^2)^2                               # ~ E^4
+    denom_2 = (y*E + mχ)^3                                          # ~ E^3
+    denom_3 = ( E*(-y*mϕ^2 - (2-y)*mχ^2) + mχ^3 - mχ*mϕ^2 )^2       # ~ E^6
+
+    return g^2/4π * dx_dE * num/(denom_1 * denom_2 * denom_3)  
+
+end

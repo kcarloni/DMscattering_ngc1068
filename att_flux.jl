@@ -2,6 +2,8 @@
 using LinearAlgebra
 using Interpolations
 
+using LinearSolve
+
 include("cross_sections.jl")
 
 # ================ constants ===================
@@ -53,9 +55,9 @@ end
 # γ = spectral index of the initial neutrino flux
 #   E^2 ϕ0 = const * (E/1GeV)^(2-γ) 
 # x = DM column density
-function calc_attenuated_flux(E_vec; g, mϕ, mχ, γ, x)
+function calc_attenuated_flux(E_vec; g, mϕ, mχ, γ, t, interaction_type)
 
-    M = get_M_RHS(E_vec; g, mϕ, mχ, interaction_type=ScalarScalar)
+    M = get_M_RHS(E_vec; g, mϕ, mχ, interaction_type)
 
     U = eigvecs(M)      # U[:, i]   = the ith eigenvector
     # column-normalize:
@@ -69,21 +71,26 @@ function calc_attenuated_flux(E_vec; g, mϕ, mχ, γ, x)
     Esq_ϕ0 = (E_vec).^(2-γ) 
 
     # solve the linear system: U x = Esq_ϕ0
-    c = U \ Esq_ϕ0
+    println("cond of eigenvector matrix U: $(cond(U))")
+    # c = U \ Esq_ϕ0
+    prob = LinearProblem(U, Esq_ϕ0)
+    c = solve(prob, SVDFactorization())
 
-    Esq_ϕ = U * (c .* exp.(λ * x))
+    Esq_ϕ = U * (c .* exp.(λ * t))
     return Esq_ϕ
 end
 
-# x = DM column density
+# t = DM column density
 # return an interpolation object (function):
 #   calculates E^2 * flux(E), where E is in GeV
-function get_f_flux(; g, mϕ, mχ, γ, x, num_nodes=120, logE_min=3, logE_max=7)
+function get_f_flux(; 
+    g, mϕ, mχ, γ, t, 
+    num_nodes=120, logE_min=3, logE_max=7, interaction_type)
 
     logE_vec = range(logE_min, logE_max, num_nodes)         # log(E / GeV)
     E_vec = exp10.(logE_vec) * GeV_to_eV
 
-    Esq_flux = calc_attenuated_flux(E_vec; g, mϕ, mχ, γ, x) # in eV
+    Esq_flux = calc_attenuated_flux(E_vec; g, mϕ, mχ, γ, t, interaction_type) # in eV
     interp_Esq_flux = linear_interpolation(logE_vec, Esq_flux) 
 
     # return linear_interpolation(logE_vec, Esq_flux)
