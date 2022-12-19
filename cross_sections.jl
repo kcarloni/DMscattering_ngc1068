@@ -20,7 +20,6 @@ function get_σ(interaction_type::Type{T}) where (T <: ScalarFermion)
     return σ_ScalarFermion
 end
 
-
 function get_dσ_dE(interaction_type::Type{T}) where (T <: ScalarScalar)
     return dσ_dE_ScalarScalar
 end
@@ -117,11 +116,11 @@ function σ_ScalarFermion(E; g, mϕ, mχ)
     A = mχ + 2E             # ~ E
     B = mχ - 2E             # ~ E
 
-    term_1 = 8E^2 * mχ / A * (mχ*A - mϕ^2)^2                # ~ 1/E^2
+    term_1 = 8E^2 * mχ / (A * (mχ*A - mϕ^2)^2)              # ~ 1/E^2
     term_2 = 4/(mχ * B - mϕ^2)                              # ~ 1/E^2
     term_3 = 8/(mχ * A - mϕ^2)                              # ~ 1/E^2
 
-    term_4 = 3/E^2 - (6mϕ^2 + 2mχ * B)/(Emχ * (mχ*A - mϕ^2))    # ~ 1/E^2 
+    term_4 = 3/E^2 - (6mϕ^2 + 2mχ * B)/(E*mχ*(mχ*A - mϕ^2))    # ~ 1/E^2 
     log_term = log1p( 4E^2 * mχ/(mϕ^2 * A - mχ^3) )
 
     return g^2/64π * (term_1 + term_2 + term_3 + term_4*log_term)

@@ -76,7 +76,8 @@ function calc_attenuated_flux(E_vec; g, mϕ, mχ, γ, t, interaction_type)
     prob = LinearProblem(U, Esq_ϕ0)
     c = solve(prob, SVDFactorization())
 
-    Esq_ϕ = U * (c .* exp.(λ * t))
+    # need factor of 1/m
+    Esq_ϕ = U * (c .* exp.(λ * t / mχ))
     return Esq_ϕ
 end
 
