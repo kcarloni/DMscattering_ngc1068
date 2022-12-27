@@ -100,7 +100,8 @@ function dσ_dE_FermionVector(Eν_i, Eν_f; g, mχ, mϕ)
     
     E = Eν_i
     num = E^2 * mχ^2 * ( y*(2-y)*E*mχ + y^2*E^2 + (2-y)*mχ^2 )
-    denom = (y*E + mχ) * (mχ * 2y*E^2 + mϕ^2*(mχ + y*E))^2
+    # fix the denom typo
+    denom = (y*E + mχ)^2 * (mχ * 2y*E^2 + mϕ^2*(mχ + y*E))^2
 
     return dx_dE * g^2/4π * num/denom
 end

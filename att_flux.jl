@@ -61,9 +61,9 @@ function calc_attenuated_flux(E_vec; g, mϕ, mχ, γ, t, interaction_type)
 
     U = eigvecs(M)      # U[:, i]   = the ith eigenvector
     # column-normalize:
-    for col in eachindex(U[1,:])
-        U[:,col] /= norm(U[:,col])
-    end
+    # for col in eachindex(U[1,:])
+    #     U[:,col] /= norm(U[:,col])
+    # end
     
     λ = eigvals(M)      # λ[i]      = the ith eigenvalue
     
@@ -71,10 +71,19 @@ function calc_attenuated_flux(E_vec; g, mϕ, mχ, γ, t, interaction_type)
     Esq_ϕ0 = (E_vec).^(2-γ) 
 
     # solve the linear system: U x = Esq_ϕ0
-    println("cond of eigenvector matrix U: $(cond(U))")
     # c = U \ Esq_ϕ0
     prob = LinearProblem(U, Esq_ϕ0)
     c = solve(prob, SVDFactorization())
+
+    # how bad was the solve?
+    # println("cond of eigenvector matrix U: $(cond(U))")
+    solve_err = sum( (U*c .- Esq_ϕ0)./Esq_ϕ0 .> 0.01 ) / length(Esq_ϕ0) 
+    println("$(100*solve_err) % of solve points > 1% from true")
+    # plot performance
+    # p = plot(xscale=:log10, size=(200, 100))
+    # plot!(E_vec, Esq_ϕ0, c=4, lw=6)
+    # plot!(E_vec, U*c, c=2, lw=1.5, ls=:dash)
+    # display(p)
 
     # need factor of 1/m
     Esq_ϕ = U * (c .* exp.(λ * t / mχ))
@@ -82,11 +91,12 @@ function calc_attenuated_flux(E_vec; g, mϕ, mχ, γ, t, interaction_type)
 end
 
 # t = DM column density
+# note that using too many nodes introduces numerical instability.
 # return an interpolation object (function):
-#   calculates E^2 * flux(E), where E is in GeV
+#   E -> flux(E), where E is in GeV
 function get_f_flux(; 
     g, mϕ, mχ, γ, t, 
-    num_nodes=120, logE_min=3, logE_max=7, interaction_type)
+    num_nodes=41, logE_min=2, logE_max=6, interaction_type)
 
     logE_vec = range(logE_min, logE_max, num_nodes)         # log(E / GeV)
     E_vec = exp10.(logE_vec) * GeV_to_eV
@@ -95,6 +105,5 @@ function get_f_flux(;
     interp_Esq_flux = linear_interpolation(logE_vec, Esq_flux) 
 
     # return linear_interpolation(logE_vec, Esq_flux)
-    # f_flux(E) = interp_Esq_flux(log10(E)) * eV_to_GeV/E^2
-    f_flux(E) = interp_Esq_flux(log10(E)) * (eV_to_GeV)^(2-γ)/E^2
+    f_flux(E) = interp_Esq_flux(log10(E)) * (eV_to_GeV)^(2-γ) / E^2
 end
