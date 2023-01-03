@@ -118,7 +118,7 @@ def get_eigs(g, mphi, mx, interaction, energy_nodes, gamma):
 
 # ================ Attenuated Flux ===================
 
-def get_att_value_theta(w, v, ci, energy_nodes, t):
+def get_att_value_theta(w, v, ci, energy_nodes, x):
     
     # w = np.tile(w,[len(energy_nodes),1])
     # phisol = np.inner(v,ci*np.exp(w.T*t).T).T * energy_nodes**(2-gamma) #attenuated flux
@@ -140,7 +140,7 @@ def get_att_value_theta(w, v, ci, energy_nodes, t):
     # note! we do not need an additional multiplication by the flux;
     # we could optionally divide out the initial flux to get the attenuation ratio, phi_sol / phi_0
 
-    phisol = np.dot(v, (ci * np.exp(w * t)))
+    phisol = np.dot(v, (ci * np.exp(w * x)))
     return phisol
 
 # return the (interpolated) flux function, flux(E) where E is in GeV. 
@@ -160,7 +160,7 @@ def attenuated_flux(g, mphi, mx, gamma=3.2, column_dens=1e23, interaction='scala
     w, v, ci = get_eigs(g, mphi, mx, interaction, energy_nodes, gamma)
 
     t = column_dens # one value, set globally (top of file)
-    flux_astro = get_att_value_theta(w, v, ci, energy_nodes, t)  # in eV
+    flux_astro = get_att_value_theta(w, v, ci, energy_nodes, t/mx)  # in eV
 
     # interpolate in log-space, to use linear point spacing
     # also, divide out the E^2 (note flux is calc in eV, so need to fix units)
