@@ -9,7 +9,10 @@
 \usepackage{amsmath}
 
 % for color text:
-\usepackage{xcolor}
+%\usepackage{xcolor}
+\usepackage[usenames,dvipsnames]{xcolor} 
+
+% for hyperlinks
 \usepackage{hyperref}
 
 % for feynman slashes: 
@@ -36,8 +39,10 @@ The models and calculations covered here feature in the following reference work
 \item Dark Matter-Neutrino Scattering in the Galactic Centre with IceCube, Adam McMullen (Thesis, May 2021)
 \end{itemize} 
 
+% In addition, \href{https://arxiv.org/pdf/1706.09895.pdf}{High-energy Neutrino Attenuation in the Earth and its Associated Uncertainties}, Jan. 2019, is an important reference for the linear algebra approach to solving the cascade equation.
+
 \newpage
-\section{\large Kinematics: }
+\section{\large Kinematics: }x
 
 Neutrino - DM scattering is analogous to Compton scattering ($\gamma + e^- \to \gamma + e^-$) if we treat the neutrino as massless.
 We can therefore follow the derivation in Peskin+Schroeder. \\
@@ -55,7 +60,7 @@ We will work in the lab frame (the dark matter rest frame). Here, we can write t
     p_2 &= (\sqrt{m_\chi^2 +p'^2}, 0, p' \sin\psi, p'\cos\psi) 
 \end{align*}}
 &
- \raisebox{-3.4cm}{\includegraphics[width=5cm]{labframe_kinematics.jpeg}}
+ \raisebox{-3.4cm}{\includegraphics[width=5cm]{images/labframe_kinematics.jpeg}}
 \end{tabular}
 
 We can then solve for $E'$ as a function of $E, \theta$ by imposing four-momentum conservation, resulting in: 
@@ -72,6 +77,8 @@ We can then solve for $E'$ as a function of $E, \theta$ by imposing four-momentu
 %\normalsize
 \[ EE'(1-\cos\theta) = m\chi(E-E') \] 
 \[ E' = \frac{E}{1 + E/m_\chi (1-\cos\theta)} \] 
+
+\textbf{Note:} For fixed values of the initial energy $E$, there is a one-to-one relationship between the scattering angle $\theta$ and the final energy $E'$. 
 
 By completing the phase-space integral (see P+S p.163) we find that
 \begin{align*}
@@ -310,5 +317,43 @@ Note that $\frac{d\sigma}{dx}$ should have units of $\frac{1}{E^2}$, which it do
 \subsection{\normalsize Scalar Dark Matter $\chi$, Fermion Mediator $\phi$ }
 
 \textcolor{blue}{The following equations are copied in from \href{https://arxiv.org/pdf/1703.00451.pdf}{Imaging Galactic Dark Matter...} and have not been re-checked.}
+
+These equations are quite lengthy, so as a shorthand I will define:
+\[ \textcolor{Green}{A = 2E + m_\chi} \quad \quad \textcolor{cyan}{B = 2E - m_\chi} \quad \quad y = 1-x \]
+Also, as above, $E$ here refers to the initial neutrino energy. 
+
+\[ \frac{d\sigma}{dx} = \frac{g^4}{4\pi} \frac{E^4 m_\chi^5 (1+x) \big(yE + 2m_\chi\big)^2}{(m_\chi \textcolor{Green}{(2E + m_\chi)} - m_\phi^2)^2 * (yE + m_\chi)^3 * \Big( E\big(-ym_\phi^2 - (1+x)m_\chi^2\big) + m_\chi(m_\chi^2 - m_\phi^2) \Big)^2 } \]
+
+\begin{multline*}
+    \sigma = \frac{g^4}{64\pi} \Bigg[ \frac{8E^2 m_\chi}{\textcolor{Green}{A}(m_\chi \textcolor{Green}{A} - m_\phi^2)^2} + \frac{4}{m_\chi \textcolor{cyan}{B} - m_\phi^2} + \frac{8}{m_\chi \textcolor{Green}{A} - m_\phi^2} \\
+    + \Big( \frac{3}{E^2} - \frac{6m_\phi^2 + 2m_\chi \textcolor{cyan}{B}}{Em_\chi(m_\chi \textcolor{Green}{A} - m_\phi^2)}\Big) \log \Big(1 + \frac{4E^2m_\chi}{m_\phi^2 \textcolor{Green}{A} - m_\chi^3} \Big)  \Bigg]
+\end{multline*}
+
+\newpage
+\section{\large Visualizing and Checking the Cross-Sections and their Differentials}
+
+\subsection{\normalsize Scalar Dark Matter $\chi$, Scalar Mediator $\phi$ }
+\subsection{\normalsize Fermion Dark Matter $\chi$, Scalar Mediator $\phi$ }
+\subsection{\normalsize Fermion Dark Matter $\chi$, Vector Mediator $\phi$ }
+\subsection{\normalsize Scalar Dark Matter $\chi$, Fermion Mediator $\phi$ }
+
+The most significant feature of the Scalar-Fermion cross-section is the presence of a resonance when the center-of-mass energy equals the mediator mass squared, $s = m_\phi^2$. This feature is a direct result of the s-channel diagram. 
+
+Since $s = 2Em_\chi + m_\chi^2 \approx 2Em_\chi$ if $E \gg m_\chi$, this resonance appears as a kink at $E_\text{kink} \approx m_\phi^2/2m_\chi$. In order to see the effects of this kink in IceCube data, we need $E_\text{kink} \sim$ 1 TeV, which roughly fixes the ratio between relevant values of $m_\chi, m_\phi$. For GeV scale mediators, the dark matter mass range is keV to MeV in scale.
+
+\begin{figure}[h!]
+    \raisebox{-3.4cm}{\includegraphics[width=8cm]{images/sf_xsec_1}}
+    \caption{The Scalar-Fermion cross-section as a function of energy, for fixed model parameters. As expected, the scale of the cross-section is roughly equal to that of neutrino DIS scattering at 1 TeV, $\sim 10^{-30} \frac{1}{\text{cm}^2}$.}
+\end{figure}
+
+\begin{figure}[h!]
+    \raisebox{-3.4cm}{\includegraphics[width=16cm]{images/sf_diffxsec_dcostheta}}
+    \caption{The cross-section is highly forward peaked. As expected, the scale of the cross-section at its peak is roughly equal to  $\sim 10^{-30} \frac{1}{\text{cm}^2}$.}
+\end{figure}
+
+\begin{figure}[h!]
+    \raisebox{-3.4cm}{\includegraphics[width=16cm]{images/sf_costheta_CDF}}
+    \caption{Partial integrals of $\frac{d\sigma}{d\cos\theta}$, in the region very close to $\cos\theta = 1$.}
+\end{figure}
 
 \end{document}  
